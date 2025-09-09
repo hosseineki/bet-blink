@@ -1,0 +1,38 @@
+{
+    "name": "betblink-server",
+    "version": "1.0.0",
+    "description": "BetBlink API Server with Bun and TypeScript",
+    "main": "src/index.ts",
+    "scripts": {
+        "dev": "bun run --hot src/index.ts",
+        "start": "bun run src/index.ts",
+        "build": "bun build src/index.ts --outdir dist",
+        "test": "bun test",
+        "test:firebase": "node scripts/test-firebase.js",
+        "format:key": "node scripts/format-private-key.js"
+    },
+  "dependencies": {
+    "bun-types": "latest",
+    "hono": "^4.0.0",
+    "zod": "^3.22.0",
+    "firebase": "^10.7.0",
+    "jsonwebtoken": "^9.0.2",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1"
+  },
+    "devDependencies": {
+        "@types/jsonwebtoken": "^9.0.5",
+        "@types/bcryptjs": "^2.4.6",
+        "@types/cors": "^2.8.17"
+    },
+    "keywords": [
+        "bun",
+        "typescript",
+        "api",
+        "firebase",
+        "hono"
+    ],
+    "author": "BetBlink Team",
+    "license": "MIT"
+}

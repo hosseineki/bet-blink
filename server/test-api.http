@@ -1,0 +1,78 @@
+### BetBlink API Test Requests
+
+### Health Check
+GET http://localhost:3001/api/health
+
+### Server Info
+GET http://localhost:3001/api/info
+
+### Register User
+POST http://localhost:3001/api/auth/register
+Content-Type: application/json
+
+{
+  "firstName": "John",
+  "lastName": "Doe",
+  "phoneNumber": "+1234567890",
+  "email": "john.doe@example.com",
+  "password": "password123",
+  "confirmPassword": "password123",
+  "dateOfBirth": "1990-01-01",
+  "address": {
+    "street": "123 Main St",
+    "city": "New York",
+    "state": "NY",
+    "postCode": "10001",
+    "country": "United States"
+  },
+  "paymentMethod": {
+    "type": "card",
+    "cardNumber": "1234567890123456",
+    "expiryDate": "12/25",
+    "cvv": "123",
+    "cardholderName": "John Doe"
+  },
+  "termsAccepted": true,
+  "marketingConsent": false
+}
+
+### Login User
+POST http://localhost:3001/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "john.doe@example.com",
+  "password": "password123"
+}
+
+### Get User Profile (Replace with actual token)
+GET http://localhost:3001/api/protected/profile
+Authorization: Bearer YOUR_ACCESS_TOKEN_HERE
+
+### Get Dashboard Data (Replace with actual token)
+GET http://localhost:3001/api/protected/dashboard
+Authorization: Bearer YOUR_ACCESS_TOKEN_HERE
+
+### Get Available Games
+GET http://localhost:3001/api/games
+
+### Get Game Rules
+GET http://localhost:3001/api/games/1/rules
+
+### Place a Bet (Replace with actual token)
+POST http://localhost:3001/api/protected/games/1/bet
+Authorization: Bearer YOUR_ACCESS_TOKEN_HERE
+Content-Type: application/json
+
+{
+  "betAmount": 10,
+  "betType": "heads"
+}
+
+### Refresh Token
+POST http://localhost:3001/api/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "YOUR_REFRESH_TOKEN_HERE"
+}
