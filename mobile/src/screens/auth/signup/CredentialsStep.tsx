@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -13,6 +13,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 import { SignUpData } from '../../../types/auth';
+import APIs from '../../../config/apis';
+
 
 interface CredentialsStepProps {
   data: Partial<SignUpData>;
@@ -33,23 +35,21 @@ export default function CredentialsStep({
     termsAccepted: data.termsAccepted || false,
   });
 
+
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
 
   const registerStep1 = async (): Promise<boolean> => {
     try {
       setIsLoading(true);
-
-      const response = await axios.post('https://webapi3.progressplay.net/api/auth/RegisterStep1', {
-        email: formData.email,
-        phoneNumber: formData.phoneNumber,
-        password: formData.password,
-        termsAccepted: formData.termsAccepted,
+      const response = await axios.post(APIs.REGISTER_STEP_1, {
+        Email: formData.email,
+        PhoneNumber: formData.phoneNumber,
+        Password: formData.password,
+        TermsAccepted: formData.termsAccepted,
       });
 
-      console.log('RegisterStep1 response:', response.data);
-
-      if (response.status === 200) {
+      if (response.status === 201) {
         return true;
       } else {
         Alert.alert('Error', 'Registration failed. Please try again.');
