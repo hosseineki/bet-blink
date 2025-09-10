@@ -1,12 +1,12 @@
 import { Hono } from 'hono';
 import { AuthService } from '../services/auth';
-import { loginSchema, signUpSchema, refreshTokenSchema, registerStep1Schema } from '../validation/schemas';
+import { loginSchema, signUpSchema, refreshTokenSchema, registerStep1Schema, registerStep2Schema } from '../validation/schemas';
 import { validateBody } from '../middleware/validation';
 import { authMiddleware } from '../middleware/auth';
 
 const auth = new Hono();
 
-// Register Step 1 Endpoint
+// ------------------------------------------ Register Steps Endpoint -----------------------------------------
 auth.post('/RegisterStep1', validateBody(registerStep1Schema), async (c) => {
   try {
     const userData = c.get('validatedData');
@@ -37,9 +37,7 @@ auth.post('/RegisterStep1', validateBody(registerStep1Schema), async (c) => {
     //   }),
     // });
     // const data = await progressPlayResponse.json();
-
-
-
+  
     return c.json({
       success: true,
       data: {
@@ -58,6 +56,20 @@ auth.post('/RegisterStep1', validateBody(registerStep1Schema), async (c) => {
     }, 400);
   }
 });
+
+auth.post('/RegisterStep2', validateBody(registerStep2Schema), async (c) => {
+
+  const userData = c.get('validatedData');
+
+  try {
+
+  } catch(error) {
+    return c.json({
+      success: false,
+      message: error instanceof Error ? error.message : 'Registration failed',
+    }, 400);
+  }
+})
 
 // Login endpoint
 auth.post('/login', validateBody(loginSchema), async (c) => {

@@ -44,7 +44,7 @@ export interface SignUpData {
     confirmPassword: string;
 
     // Stage 2: Profile Information
-    dateOfBirth: string;
+    dateOfBirth: Date;
     gender: string;
 
     // Stage 3: Address
