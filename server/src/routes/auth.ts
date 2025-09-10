@@ -10,7 +10,7 @@ const auth = new Hono();
 auth.post('/RegisterStep1', validateBody(registerStep1Schema), async (c) => {
   try {
     const userData = c.get('validatedData');
-    const { user, tokens } = await AuthService.register(userData);
+    //const { user, tokens } = await AuthService.register(userData);
 
     if (!userData?.Email || !userData?.Password) return c.json({
       success: false,
@@ -19,33 +19,33 @@ auth.post('/RegisterStep1', validateBody(registerStep1Schema), async (c) => {
 
     console.log('User data:', userData);
 
-    const progressPlayResponse = await fetch('https://webapi3.progressplay.net/player/RegisterStep1', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        Email: userData.email,
-        Password: userData.Password,
-        CellPhoneNumber: userData.CellPhoneNumber,
-        GameToken: '',
-        LanguageID: 254,
-        PlatformType: 750,
-        PlayMode: 707,
-        UserAgent: 'test',
-        WhiteLabelId: 0
-      }),
-    });
-    const data = await progressPlayResponse.json();
+    // const progressPlayResponse = await fetch('https://webapi3.progressplay.net/player/RegisterStep1', {
+    //   method: 'POST',
+    //   headers: {
+    //     'Content-Type': 'application/json',
+    //   },
+    //   body: JSON.stringify({
+    //     Email: userData.email,
+    //     Password: userData.Password,
+    //     CellPhoneNumber: userData.CellPhoneNumber,
+    //     GameToken: '',
+    //     LanguageID: 254,
+    //     PlatformType: 750,
+    //     PlayMode: 707,
+    //     UserAgent: 'test',
+    //     WhiteLabelId: 0
+    //   }),
+    // });
+    // const data = await progressPlayResponse.json();
 
 
 
     return c.json({
       success: true,
       data: {
-        user,
-        tokens,
-        requiresVerification: !user.isEmailVerified,
+        // user,
+        // tokens,
+        // requiresVerification: !user.isEmailVerified,
       },
       message: 'User registered successfully',
     }, 201);
