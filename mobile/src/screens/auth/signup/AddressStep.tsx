@@ -7,10 +7,13 @@ import {
   TouchableOpacity,
   Modal,
   ScrollView,
+  Alert,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { SignUpData, Address } from '../../../types/auth';
+import axios from 'axios';
+import APIs from './../../../config/apis';
 
 interface AddressStepProps {
   data: Partial<SignUpData>;
@@ -31,6 +34,7 @@ export default function AddressStep({
     country: data.address?.country || 'United Kingdom',
   });
 
+  const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isManualEntry, setIsManualEntry] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -68,9 +72,54 @@ export default function AddressStep({
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleNext = (): void => {
+  const registerStep2 = async () => {
+    try {
+      setIsLoading(true);
+      
+      // Combine profile data from previous step with current address data
+      const registrationData = {
+        ...data, // Profile data from ProfileStep
+        address: {
+          ...address,
+          currency,
+          promotionCode: promotionCode || undefined,
+        },
+      };
+
+      const response = await axios.post(APIs.REGISTER_STEP_2, registrationData);
+
+      if (response.status === 201 || response.status === 200) {
+        return true;
+      } else {
+        Alert.alert('Error', 'Registration failed. Please try again.');
+        return false;
+      }
+    } catch (error: any) {
+      console.error('RegisterStep2 error:', error);
+
+      if (error.response?.data?.message) {
+        Alert.alert('Registration Error', error.response.data.message);
+      } else {
+        Alert.alert('Error', 'Network error. Please check your connection and try again.');
+      }
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  const handleNext = async (): void => {
     if (validateForm()) {
-      onNext({ address });
+      const success = await registerStep2();
+      if (success) {
+        onNext({ 
+          address: {
+            ...address,
+            currency,
+            promotionCode: promotionCode || undefined,
+          }
+        });
+      }
     }
   };
 
@@ -377,13 +426,19 @@ export default function AddressStep({
           <Text style={styles.previousButtonText}>Previous</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
+        <TouchableOpacity 
+          style={[styles.nextButton, isLoading && styles.nextButtonDisabled]} 
+          onPress={handleNext}
+          disabled={isLoading}
+        >
           <LinearGradient
-            colors={['#ffd700', '#ffed4e']}
+            colors={isLoading ? ['#666', '#555'] : ['#ffd700', '#ffed4e']}
             style={styles.nextButtonGradient}
           >
-            <Text style={styles.nextButtonText}>Next</Text>
-            <Ionicons name="arrow-forward" size={20} color="#1a1a2e" />
+            <Text style={[styles.nextButtonText, isLoading && styles.nextButtonTextDisabled]}>
+              {isLoading ? 'Processing...' : 'Next'}
+            </Text>
+            {!isLoading && <Ionicons name="arrow-forward" size={20} color="#1a1a2e" />}
           </LinearGradient>
         </TouchableOpacity>
       </View>
@@ -509,6 +564,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     marginRight: 8,
+  },
+  nextButtonDisabled: {
+    opacity: 0.6,
+  },
+  nextButtonTextDisabled: {
+    color: '#999',
   },
   selectableField: {
     flexDirection: 'row',
