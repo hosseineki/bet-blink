@@ -1,5 +1,12 @@
 # 🚨 Troubleshooting Guide - UI Not Rendering
 
+## run emulator with this command on another console
+emulator -avd MyEmualtor -gpu swiftshader_indirect -no-snapshot
+
+## To rebuild (cleared cache):
+npx expo start -c
+
+
 ## Problem Description
 After upgrading to Expo SDK 53, the game interface is not showing:
 - Side selection buttons are not visible/clickable
