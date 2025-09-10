@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   Alert,
   Modal,
   ScrollView,
+  TextInput
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -24,11 +25,12 @@ export default function ProfileStep({
   onNext,
   onPrevious
 }: ProfileStepProps): React.JSX.Element {
+  const [fullName, setFullName] = useState({ firstName: '', lastName: '' });
   const [dateOfBirth, setDateOfBirth] = useState<Date>(
     data.dateOfBirth ? new Date(data.dateOfBirth) : new Date(2000, 0, 1)
   );
-  const [showDatePicker, setShowDatePicker] = useState<boolean>(false);
-  const [error, setError] = useState<string>('');
+
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [showYearPicker, setShowYearPicker] = useState<boolean>(false);
   const [showMonthPicker, setShowMonthPicker] = useState<boolean>(false);
   const [showDayPicker, setShowDayPicker] = useState<boolean>(false);
@@ -48,6 +50,17 @@ export default function ProfileStep({
     },
   });
 
+  useEffect(() => {
+    const tempData = {
+      dateOfBirth: new Date(1991, 1, 1),
+      gender: 'male',
+      fullName: { firstName: 'John', lastName: 'Doe' },
+    };
+    setDateOfBirth(tempData.dateOfBirth);
+    setGender(tempData.gender);
+    setFullName(tempData.fullName);
+  }, []);
+
   const validateAge = (birthDate: Date): boolean => {
     const today = new Date();
     const age = today.getFullYear() - birthDate.getFullYear();
@@ -60,64 +73,97 @@ export default function ProfileStep({
     return age >= 18;
   };
 
-  const handleDateChange = (event: any, selectedDate?: Date): void => {
-    setShowDatePicker(false);
 
-    if (selectedDate) {
-      if (validateAge(selectedDate)) {
-        setDateOfBirth(selectedDate);
-        setError('');
-      } else {
-        setError('You must be at least 18 years old to register');
-      }
-    }
-  };
-
+  // ---------------------------------- DoB validation
   const handleYearChange = (year: number): void => {
-    const newDate = new Date(year, dateOfBirth.getMonth(), dateOfBirth.getDate());
+    // Ensure the day is valid for the selected month/year
+    const daysInMonth = new Date(year, dateOfBirth.getMonth() + 1, 0).getDate();
+    const validDay = Math.min(dateOfBirth.getDate(), daysInMonth);
+    const newDate = new Date(year, dateOfBirth.getMonth(), validDay);
+    
     if (validateAge(newDate)) {
       setDateOfBirth(newDate);
-      setError('');
+      setErrors(prev => ({...prev, dateOfBirth: '' }));
     } else {
-      setError('You must be at least 18 years old to register');
+      setErrors(prev => ({...prev, dateOfBirth: 'You must be at least 18 years old to register' })); 
     }
     setShowYearPicker(false);
   };
 
   const handleMonthChange = (month: number): void => {
-    const newDate = new Date(dateOfBirth.getFullYear(), month, dateOfBirth.getDate());
+    // Ensure the day is valid for the selected month/year
+    const daysInMonth = new Date(dateOfBirth.getFullYear(), month + 1, 0).getDate();
+    const validDay = Math.min(dateOfBirth.getDate(), daysInMonth);
+    const newDate = new Date(dateOfBirth.getFullYear(), month, validDay);
+    
     if (validateAge(newDate)) {
       setDateOfBirth(newDate);
-      setError('');
+      setErrors(prev => ({...prev, dateOfBirth: '' }));
     } else {
-      setError('You must be at least 18 years old to register');
+      setErrors(prev => ({...prev, dateOfBirth: 'You must be at least 18 years old to register' }));
     }
     setShowMonthPicker(false);
   };
 
   const handleDayChange = (day: number): void => {
-    const newDate = new Date(dateOfBirth.getFullYear(), dateOfBirth.getMonth(), day);
+    // Ensure the day is valid for the selected month/year
+    const daysInMonth = new Date(dateOfBirth.getFullYear(), dateOfBirth.getMonth() + 1, 0).getDate();
+    const validDay = Math.min(day, daysInMonth);
+    const newDate = new Date(dateOfBirth.getFullYear(), dateOfBirth.getMonth(), validDay);
+
     if (validateAge(newDate)) {
       setDateOfBirth(newDate);
-      setError('');
+      setErrors(prev => ({...prev, dateOfBirth: '' }));
     } else {
-      setError('You must be at least 18 years old to register');
+      setErrors(prev => ({...prev, dateOfBirth: 'You must be at least 18 years old to register' }));
     }
     setShowDayPicker(false);
   };
+  //-----------------------------------------------------
+
+  const isFormValid = (): boolean => {
+    return (
+      fullName.firstName.length >= 2 &&
+      fullName.lastName.length >= 2 &&
+      validateAge(dateOfBirth) &&
+      gender !== ''
+    );
+  };
+
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    if (!fullName.firstName) {
+      newErrors.firstName = 'Please enter your First name';
+    } else if (fullName.firstName.length < 2) {
+      newErrors.firstName = 'First name must be at least 2 characters';
+    }
+
+    if (!fullName.lastName) {
+      newErrors.lastName = 'Please enter your Last name';
+    } else if (fullName.lastName.length < 2) {
+      newErrors.lastName = 'Last name must be at least 2 characters';
+    }
+    if (!validateAge(dateOfBirth)) {
+      newErrors.dateOfBirth = 'You must be at least 18 years old to register';
+    }
+
+    if (!gender) {
+      newErrors.gender = 'Please select your gender';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleNext = (): void => {
-    if (validateAge(dateOfBirth) && gender) {
+    if (validateForm()) {
       onNext({
-        dateOfBirth: dateOfBirth.toISOString().split('T')[0],
+        dateOfBirth,
         gender,
         marketingConsent: promotionalOffers,
         promoPreferences: promotionalOffers ? promoPreferences : undefined
       });
-    } else if (!gender) {
-      setError('Please select your gender');
-    } else {
-      setError('You must be at least 18 years old to register');
     }
   };
 
@@ -169,18 +215,10 @@ export default function ProfileStep({
     );
   };
 
-  const formatDate = (date: Date): string => {
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
-  };
-
   const generateYears = (): number[] => {
     const currentYear = new Date().getFullYear();
     const years = [];
-    for (let year = currentYear - 18; year >= 1900; year--) {
+    for (let year = currentYear - 1; year >= 1900; year--) {
       years.push(year);
     }
     return years;
@@ -212,6 +250,14 @@ export default function ProfileStep({
     return days;
   };
 
+  const handleInputChange = (field: string, value: string | boolean): void => {
+    setFullName(prev => ({ ...prev, [field]: value }));
+    // Clear error when user starts typing
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: '' }));
+    }
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.description}>
@@ -219,12 +265,41 @@ export default function ProfileStep({
       </Text>
 
       <View style={styles.form}>
+
+        {/* First Name */}
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>First Name *</Text>
+          <TextInput
+            style={[styles.input, errors.firstName && styles.inputError]}
+            value={fullName.firstName}
+            onChangeText={(value) => handleInputChange('firstName', value)}
+            placeholder="Enter your first name"
+            placeholderTextColor="#666"
+          />
+          {errors.firstName && <Text style={styles.errorText}>{errors.firstName as string}</Text>}
+        </View>
+
+        {/* Last Name */}
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>Last Name *</Text>
+          <TextInput
+            style={[styles.input, errors.lastName && styles.inputError]}
+            value={fullName.lastName}
+            onChangeText={(value) => handleInputChange('lastName', value)}
+            placeholder="Enter your last name"
+            placeholderTextColor="#666"
+            autoCapitalize="none"
+          />
+          {errors.lastName && <Text style={styles.errorText}>{errors.lastName as string}</Text>}
+        </View>
+
+
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Date of Birth *</Text>
           <View style={styles.dateContainer}>
             {/* Year Dropdown */}
             <TouchableOpacity
-              style={[styles.dateDropdown, error && styles.dateDropdownError]}
+              style={[styles.dateDropdown, (errors.dateOfBirth as DatePart)?.year && styles.dateDropdownError]}
               onPress={() => setShowYearPicker(true)}
             >
               <Text style={styles.dateDropdownText}>
@@ -235,7 +310,7 @@ export default function ProfileStep({
 
             {/* Month Dropdown */}
             <TouchableOpacity
-              style={[styles.dateDropdown, error && styles.dateDropdownError]}
+              style={[styles.dateDropdown, (errors.dateOfBirth as DatePart)?.month && styles.dateDropdownError]}
               onPress={() => setShowMonthPicker(true)}
             >
               <Text style={styles.dateDropdownText}>
@@ -246,7 +321,7 @@ export default function ProfileStep({
 
             {/* Day Dropdown */}
             <TouchableOpacity
-              style={[styles.dateDropdown, error && styles.dateDropdownError]}
+              style={[styles.dateDropdown, (errors.dateOfBirth as DatePart)?.day && styles.dateDropdownError]}
               onPress={() => setShowDayPicker(true)}
             >
               <Text style={styles.dateDropdownText}>
@@ -255,7 +330,7 @@ export default function ProfileStep({
               <Ionicons name="chevron-down" size={16} color="#b0b0b0" />
             </TouchableOpacity>
           </View>
-          {error && <Text style={styles.errorText}>{error}</Text>}
+          {errors && <Text style={styles.errorText}>{errors.dateOfBirth}</Text>}
         </View>
 
         <View style={styles.inputGroup}>
@@ -314,18 +389,6 @@ export default function ProfileStep({
           </Text>
         </View>
       </View>
-
-      {/* Date Picker Modal */}
-      {showDatePicker && (
-        <DateTimePicker
-          value={dateOfBirth}
-          mode="date"
-          display="default"
-          onChange={handleDateChange}
-          maximumDate={new Date()}
-          minimumDate={new Date(1900, 0, 1)}
-        />
-      )}
 
       {/* Year Picker Modal */}
       <Modal
@@ -577,21 +640,21 @@ export default function ProfileStep({
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.nextButton, error && styles.nextButtonDisabled]}
+          style={[styles.nextButton, !isFormValid() && styles.nextButtonDisabled]}
           onPress={handleNext}
-          disabled={!!error}
+          disabled={!isFormValid()}
         >
           <LinearGradient
-            colors={error ? ['#666', '#555'] : ['#ffd700', '#ffed4e']}
+            colors={!isFormValid() ? ['#666', '#555'] : ['#ffd700', '#ffed4e']}
             style={styles.nextButtonGradient}
           >
-            <Text style={[styles.nextButtonText, error && styles.nextButtonTextDisabled]}>
+            <Text style={[styles.nextButtonText, !isFormValid() && styles.nextButtonTextDisabled]}>
               Next
             </Text>
             <Ionicons
               name="arrow-forward"
               size={20}
-              color={error ? '#999' : '#1a1a2e'}
+              color={!isFormValid() ? '#999' : '#1a1a2e'}
             />
           </LinearGradient>
         </TouchableOpacity>
@@ -612,6 +675,24 @@ const styles = StyleSheet.create({
   },
   form: {
     flex: 1,
+  },
+  input: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    fontSize: 16,
+    color: '#ffffff',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  inputError: {
+    borderColor: '#ff6b6b',
+  },
+  errorText: {
+    color: '#ff6b6b',
+    fontSize: 14,
+    marginTop: 4,
   },
   inputGroup: {
     marginBottom: 30,
@@ -664,11 +745,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#ffffff',
     marginLeft: 12,
-  },
-  errorText: {
-    color: '#ff6b6b',
-    fontSize: 14,
-    marginTop: 8,
   },
   infoBox: {
     flexDirection: 'row',
