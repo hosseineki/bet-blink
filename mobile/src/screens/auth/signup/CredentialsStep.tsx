@@ -7,22 +7,24 @@ import {
   TouchableOpacity,
   Alert,
   Linking,
+  ActivityIndicator,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import axios from 'axios';
 import { SignUpData } from '../../../types/auth';
 
-interface PersonalInfoStepProps {
+interface CredentialsStepProps {
   data: Partial<SignUpData>;
   onNext: (data: Partial<SignUpData>) => void;
   onPrevious?: () => void;
 }
 
-export default function PersonalInfoStep({
+export default function CredentialsStep({
   data,
   onNext,
   onPrevious
-}: PersonalInfoStepProps): React.JSX.Element {
+}: CredentialsStepProps): React.JSX.Element {
   const [formData, setFormData] = useState({
     email: data.email || '',
     phoneNumber: data.phoneNumber || '',
@@ -32,6 +34,40 @@ export default function PersonalInfoStep({
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isLoading, setIsLoading] = useState(false);
+
+  const registerStep1 = async (): Promise<boolean> => {
+    try {
+      setIsLoading(true);
+
+      const response = await axios.post('https://webapi3.progressplay.net/api/auth/RegisterStep1', {
+        email: formData.email,
+        phoneNumber: formData.phoneNumber,
+        password: formData.password,
+        termsAccepted: formData.termsAccepted,
+      });
+
+      console.log('RegisterStep1 response:', response.data);
+
+      if (response.status === 200) {
+        return true;
+      } else {
+        Alert.alert('Error', 'Registration failed. Please try again.');
+        return false;
+      }
+    } catch (error: any) {
+      console.error('RegisterStep1 error:', error);
+
+      if (error.response?.data?.message) {
+        Alert.alert('Registration Error', error.response.data.message);
+      } else {
+        Alert.alert('Error', 'Network error. Please check your connection and try again.');
+      }
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -66,11 +102,12 @@ export default function PersonalInfoStep({
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleNext = (): void => {
-    console.log('formData', validateForm());
+  const handleNext = async (): Promise<void> => {
     if (validateForm()) {
-
-      onNext(formData);
+      const success = await registerStep1();
+      if (success) {
+        onNext(formData);
+      }
     }
   };
 
@@ -210,13 +247,23 @@ export default function PersonalInfoStep({
           </TouchableOpacity>
         )}
 
-        <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
+        <TouchableOpacity
+          style={[styles.nextButton, isLoading && styles.nextButtonDisabled]}
+          onPress={handleNext}
+          disabled={isLoading}
+        >
           <LinearGradient
-            colors={['#ffd700', '#ffed4e']}
+            colors={isLoading ? ['#666', '#555'] : ['#ffd700', '#ffed4e']}
             style={styles.nextButtonGradient}
           >
-            <Text style={styles.nextButtonText}>Next</Text>
-            <Ionicons name="arrow-forward" size={20} color="#1a1a2e" />
+            {isLoading ? (
+              <ActivityIndicator size="small" color="#1a1a2e" />
+            ) : (
+              <>
+                <Text style={styles.nextButtonText}>Next</Text>
+                <Ionicons name="arrow-forward" size={20} color="#1a1a2e" />
+              </>
+            )}
           </LinearGradient>
         </TouchableOpacity>
       </View>
@@ -302,6 +349,9 @@ const styles = StyleSheet.create({
   nextButton: {
     flex: 1,
     marginLeft: 20,
+  },
+  nextButtonDisabled: {
+    opacity: 0.6,
   },
   nextButtonGradient: {
     flexDirection: 'row',

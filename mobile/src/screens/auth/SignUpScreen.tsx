@@ -12,7 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../../App';
 import { SignUpData, SignUpStage } from '../../types/auth';
-import PersonalInfoStep from './signup/PersonalInfoStep';
+import CredentialsStep from './signup/CredentialsStep';
 import ProfileStep from './signup/ProfileStep';
 import AddressStep from './signup/AddressStep';
 // import PaymentStep from './signup/PaymentStep';
@@ -71,7 +71,7 @@ export default function SignUpScreen({ navigation }: SignUpScreenProps): React.J
     switch (stage) {
       case 'credentials':
         return (
-          <PersonalInfoStep
+          <CredentialsStep
             data={signUpData}
             onNext={handleNext}
             onPrevious={currentStage > 0 ? handlePrevious : undefined}
