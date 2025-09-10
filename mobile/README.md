@@ -1,4 +1,4 @@
-# Coin Flip Game 🪙
+# Bet Blink 🪙
 
 A beautiful and engaging React Native coin flip betting game with smooth animations and modern UI design.
 
