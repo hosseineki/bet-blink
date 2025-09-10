@@ -46,14 +46,17 @@ export const loginSchema = z.object({
 //-------------------- Sign up validation schema --------------------
 export const registerStep1Schema = z.object({
   Email: z.string().email('Invalid email format'),
+  PhoneNumber: z.string().min(10, 'Phone number must be at least 10 characters'),
   Password: z.string().min(8, 'Password must be at least 8 characters'),
-  CellPhoneNumber: z.string().min(10, 'Phone number must be at least 10 characters')
+  TermsAccepted: z.boolean().refine((val) => val === true, {
+    message: 'You must accept the terms and conditions',
+  })
 });
 
 export const registerStep2Schema = z.object({
   Email: z.string().email('Invalid email format'),
   Password: z.string().min(8, 'Password must be at least 8 characters'),
-  CellPhoneNumber: z.string().min(10, 'Phone number must be at least 10 characters')
+  PhoneNumber: z.string().min(10, 'Phone number must be at least 10 characters')
 });
 
 // Sign up validation schema
