@@ -1,7 +1,7 @@
 {
     "expo": {
-        "name": "Coin Flip Game",
-        "slug": "coinflipgame",
+        "name": "Bet Blink",
+        "slug": "bet_blink",
         "version": "1.0.0",
         "orientation": "portrait",
         "icon": "./assets/icon.png",
