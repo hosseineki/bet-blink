@@ -31,7 +31,7 @@ publicRoutes.get('/games', (c) => {
     {
       id: '1',
       name: 'Coin Flip',
-      description: 'Simple coin flip game with 50/50 odds',
+      description: 'Simple Bet Blink with 50/50 odds',
       type: 'chance',
       minBet: 1,
       maxBet: 100,

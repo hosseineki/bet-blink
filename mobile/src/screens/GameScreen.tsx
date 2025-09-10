@@ -132,7 +132,7 @@ export default function GameScreen({ navigation }: GameScreenProps): React.JSX.E
                 <TouchableOpacity style={styles.backButton} onPress={goBack}>
                     <Ionicons name="arrow-back" size={24} color="#ffffff" />
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>Coin Flip Game</Text>
+                <Text style={styles.headerTitle}>Bet Blink</Text>
                 <TouchableOpacity style={styles.resetButton} onPress={resetGame}>
                     <Ionicons name="refresh" size={24} color="#ffffff" />
                 </TouchableOpacity>
