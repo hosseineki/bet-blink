@@ -16,11 +16,19 @@ export interface User {
 }
 
 export interface Address {
-    street: string;
+    address: string;
     city: string;
-    state: string;
     postCode: string;
     country: string;
+}
+
+export interface AddressSearchResult {
+    id: string;
+    address: string;
+    city: string;
+    postCode: string;
+    country: string;
+    formattedAddress: string;
 }
 
 export interface AuthTokens {
@@ -44,7 +52,7 @@ export interface SignUpData {
     confirmPassword: string;
 
     // Stage 2: Profile Information
-    dateOfBirth: Date;
+    dateOfBirth: string;
     gender: string;
 
     // Stage 3: Address
@@ -57,6 +65,8 @@ export interface SignUpData {
     termsAccepted: boolean;
     marketingConsent: boolean;
     promoPreferences?: PromoPreferences;
+    currency?: string;
+    promotionCode?: string;
 }
 
 export interface PromoPreferences {
