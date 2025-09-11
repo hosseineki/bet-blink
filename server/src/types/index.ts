@@ -15,11 +15,19 @@ export interface User {
 }
 
 export interface Address {
-  street: string;
+  address: string;
   city: string;
-  state: string;
   postCode: string;
   country: string;
+}
+
+export interface AddressSearchResult {
+  id: string;
+  address: string;
+  city: string;
+  postCode: string;
+  country: string;
+  formattedAddress: string;
 }
 
 export interface AuthTokens {

@@ -2,11 +2,10 @@ import { z } from 'zod';
 
 // Address validation schema
 export const addressSchema = z.object({
-  street: z.string().min(1, 'Street address is required'),
-  city: z.string().min(1, 'City is required'),
-  state: z.string().min(1, 'State is required'),
-  postCode: z.string().min(1, 'Postal code is required'),
   country: z.string().min(1, 'Country is required'),
+  address: z.string().min(1, 'Address is required'),
+  city: z.string().min(1, 'City is required'),
+  postCode: z.string().min(1, 'Postal code is required')
 });
 
 // Payment method validation schema
@@ -54,9 +53,13 @@ export const registerStep1Schema = z.object({
 });
 
 export const registerStep2Schema = z.object({
-  Email: z.string().email('Invalid email format'),
-  Password: z.string().min(8, 'Password must be at least 8 characters'),
-  PhoneNumber: z.string().min(10, 'Phone number must be at least 10 characters')
+  dateOfBirth: z.string().min(1, 'Date of birth is required'),
+  gender: z.string().min(1, 'Gender is required'),
+  marketingConsent: z.boolean().optional(),
+  promoPreferences: z.any().optional(),
+  address: addressSchema,
+  currency: z.string().optional(),
+  promotionCode: z.string().optional(),
 });
 
 // Sign up validation schema
@@ -103,4 +106,10 @@ export const newPasswordSchema = z.object({
 }).refine((data) => data.password === data.confirmPassword, {
   message: 'Passwords do not match',
   path: ['confirmPassword'],
+});
+
+// Address search validation schema
+export const addressSearchSchema = z.object({
+  query: z.string().min(2, 'Search query must be at least 2 characters'),
+  country: z.string().optional(),
 });

@@ -1,4 +1,7 @@
 import { Hono } from 'hono';
+import { validateQuery } from '../middleware/validation';
+import { addressSearchSchema } from '../validation/schemas';
+import { AddressSearchResult } from '../types';
 
 const publicRoutes = new Hono();
 
@@ -157,6 +160,69 @@ publicRoutes.get('/privacy', (c) => {
     success: true,
     data: { privacy },
     message: 'Privacy policy retrieved successfully',
+  });
+});
+
+// Address search endpoint
+publicRoutes.get('/address/search', validateQuery(addressSearchSchema), (c) => {
+  const { query, country } = c.get('validatedData');
+
+  // Mock address search results - in a real app, this would call a geocoding service
+  const mockAddresses: AddressSearchResult[] = [
+    {
+      id: '1',
+      address: '184 Whitacres Road',
+      city: 'Glasgow',
+      postCode: 'G53 7ZP',
+      country: country || 'United Kingdom',
+      formattedAddress: '184 Whitacres Road, Glasgow, G53 7ZP, United Kingdom'
+    },
+    {
+      id: '2',
+      address: '184 High Street',
+      city: 'Edinburgh',
+      postCode: 'EH1 1QS',
+      country: country || 'United Kingdom',
+      formattedAddress: '184 High Street, Edinburgh, EH1 1QS, United Kingdom'
+    },
+    {
+      id: '3',
+      address: '184 Oxford Street',
+      city: 'London',
+      postCode: 'W1C 1JN',
+      country: country || 'United Kingdom',
+      formattedAddress: '184 Oxford Street, London, W1C 1JN, United Kingdom'
+    },
+    {
+      id: '4',
+      address: '184 George Street',
+      city: 'Manchester',
+      postCode: 'M1 4HE',
+      country: country || 'United Kingdom',
+      formattedAddress: '184 George Street, Manchester, M1 4HE, United Kingdom'
+    },
+    {
+      id: '5',
+      address: '184 Queen Street',
+      city: 'Birmingham',
+      postCode: 'B1 1AA',
+      country: country || 'United Kingdom',
+      formattedAddress: '184 Queen Street, Birmingham, B1 1AA, United Kingdom'
+    }
+  ];
+
+  // Filter results based on query
+  const filteredAddresses = mockAddresses.filter(addr =>
+    addr.address.toLowerCase().includes(query.toLowerCase()) ||
+    addr.city.toLowerCase().includes(query.toLowerCase()) ||
+    addr.postCode.toLowerCase().includes(query.toLowerCase()) ||
+    addr.formattedAddress.toLowerCase().includes(query.toLowerCase())
+  );
+
+  return c.json({
+    success: true,
+    data: { addresses: filteredAddresses },
+    message: 'Address search completed successfully',
   });
 });
 
