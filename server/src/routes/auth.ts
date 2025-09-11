@@ -19,34 +19,47 @@ auth.post('/RegisterStep1', validateBody(registerStep1Schema), async (c) => {
 
     console.log('User data:', userData);
 
-    // const progressPlayResponse = await fetch('https://webapi3.progressplay.net/player/RegisterStep1', {
-    //   method: 'POST',
-    //   headers: {
-    //     'Content-Type': 'application/json',
-    //   },
-    //   body: JSON.stringify({
-    //     Email: userData.email,
-    //     Password: userData.Password,
-    //     CellPhoneNumber: userData.CellPhoneNumber,
-    //     GameToken: '',
-    //     LanguageID: 254,
-    //     PlatformType: 750,
-    //     PlayMode: 707,
-    //     UserAgent: 'test',
-    //     WhiteLabelId: 0
-    //   }),
-    // });
-    // const data = await progressPlayResponse.json();
-  
-    return c.json({
-      success: true,
-      data: {
-        // user,
-        // tokens,
-        // requiresVerification: !user.isEmailVerified,
+    const progressPlayResponse = await fetch('https://webapi3.progressplay.net/player/RegisterStep1', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
       },
-      message: 'User registered successfully',
-    }, 201);
+      body: JSON.stringify({
+        Email: userData?.Email,
+        Password: userData?.Password,
+        CellphoneNumber: userData?.PhoneNumber,
+        ClickId: "",
+        CountryId: 221,
+        CurrencyId: 3,
+        Dynamic: "",
+        LanguageId: 254,
+        PlatformType: 0,
+        RegistrationPlayMode: 707,
+        Tracker: "",
+        UserAgent: "test",
+        WelcomeBonusDesc: "Welcome Bonus 100% up to £200",
+        WelcomeBonusDescSport: "Deposit Min. £10 and Get £10 Free Bet",
+        WhiteLabelId: 277
+      }),
+    });
+
+    const data = await progressPlayResponse.json();
+
+    if (progressPlayResponse.status === 200) {
+      console.log('Success: RegisterStep1 API call successful', data);
+      return c.json({
+        success: true,
+        data: {
+          // user,
+          // tokens,
+          // requiresVerification: !user.isEmailVerified,
+        },
+        message: 'User registered successfully',
+      }, 200);
+    } else {
+      console.log('Error: RegisterStep1 API call failed, status was not 200');
+    }
+
   } catch (error) {
     console.error('Registration error:', error);
 
@@ -60,10 +73,67 @@ auth.post('/RegisterStep1', validateBody(registerStep1Schema), async (c) => {
 auth.post('/RegisterStep2', validateBody(registerStep2Schema), async (c) => {
 
   const userData = c.get('validatedData');
+  console.log('User data:', userData);
 
   try {
+    const progressPlayResponse = await fetch('https://webapi3.progressplay.net/player/RegisterStep2', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        PlayerId: 9737199,
+        Address: userData?.address.address,
+        City: userData?.address.city,
+        ZipCode: userData?.address.postCode,
+        ProfessionId: 0,
+        ProfessionName: "",
+        CurrencyId: 3,
+        PromotionCode: userData?.promotionCode | "",
+        GenderID: 358,
+        UserAgent: "test",
+        savedData: {},
+        PlayerCommunicationConsent: [{ "Id": 64579684, "PlayerId": 9737199, "PlayMode": 706, "CommunicationChannel": -101, "Enabled": false, "IsDeleted": false }, { "Id": 64579683, "PlayerId": 9737199, "PlayMode": 706, "CommunicationChannel": -100, "Enabled": false, "IsDeleted": false }, { "Id": 64579688, "PlayerId": 9737199, "PlayMode": 707, "CommunicationChannel": -101, "Enabled": false, "IsDeleted": false }, { "Id": 64579687, "PlayerId": 9737199, "PlayMode": 707, "CommunicationChannel": -100, "Enabled": false, "IsDeleted": false }, { "Id": 64579686, "PlayerId": 9737199, "PlayMode": 911, "CommunicationChannel": -101, "Enabled": false, "IsDeleted": false }, { "Id": 64579685, "PlayerId": 9737199, "PlayMode": 911, "CommunicationChannel": -100, "Enabled": false, "IsDeleted": false }],
+        Area: userData?.address.address.split(',')[1],
+        BuildingNumber: userData?.address.address.split(',')[0],
+        Street: userData?.address.address.split(',')[1],
+        Company: "",
+        FirstName: userData?.firstName,
+        LastName: userData?.lastName,
+        Gender: userData?.gender,
+        Birthday: userData?.dateOfBirth,
+        ReceivePartner: false,
+        ReceiveEmail: false,
+        ReceiveSMS: false,
+        ReceivePhone: false,
+        ReceivePost: false,
+        ShowConsent: false,
+        CommunicationConsents: [{ "Id": 64579684, "PlayerId": 9737199, "PlayMode": 706, "CommunicationChannel": -101, "Enabled": false, "IsDeleted": false }, { "Id": 64579683, "PlayerId": 9737199, "PlayMode": 706, "CommunicationChannel": -100, "Enabled": false, "IsDeleted": false }, { "Id": 64579688, "PlayerId": 9737199, "PlayMode": 707, "CommunicationChannel": -101, "Enabled": false, "IsDeleted": false }, { "Id": 64579687, "PlayerId": 9737199, "PlayMode": 707, "CommunicationChannel": -100, "Enabled": false, "IsDeleted": false }, { "Id": 64579686, "PlayerId": 9737199, "PlayMode": 911, "CommunicationChannel": -101, "Enabled": false, "IsDeleted": false }, { "Id": 64579685, "PlayerId": 9737199, "PlayMode": 911, "CommunicationChannel": -100, "Enabled": false, "IsDeleted": false }],
+        HasMarketingConsentGrid: true
+      }),
+    });
 
-  } catch(error) {
+    const data = await progressPlayResponse.json();
+
+    if (progressPlayResponse.status === 200) {
+      console.log('Success: RegisterStep2 API call successful', data);
+      return c.json({
+        success: true,
+        data: {
+          // user,
+          // tokens,
+          // requiresVerification: !user.isEmailVerified,
+        },
+        message: 'User registered successfully',
+      }, 200);
+    } else {
+      console.log('Error: RegisterStep2 API call failed, status was not 200', data);
+      // return c.json({
+      //   success: false,
+      //   message: data,
+      // }, 400);
+    }
+  } catch (error) {
     return c.json({
       success: false,
       message: error instanceof Error ? error.message : 'Registration failed',
