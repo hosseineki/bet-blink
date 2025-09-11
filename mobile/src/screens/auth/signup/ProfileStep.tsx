@@ -80,12 +80,12 @@ export default function ProfileStep({
     const daysInMonth = new Date(year, dateOfBirth.getMonth() + 1, 0).getDate();
     const validDay = Math.min(dateOfBirth.getDate(), daysInMonth);
     const newDate = new Date(year, dateOfBirth.getMonth(), validDay);
-    
+
     if (validateAge(newDate)) {
       setDateOfBirth(newDate);
-      setErrors(prev => ({...prev, dateOfBirth: '' }));
+      setErrors(prev => ({ ...prev, dateOfBirth: '' }));
     } else {
-      setErrors(prev => ({...prev, dateOfBirth: 'You must be at least 18 years old to register' })); 
+      setErrors(prev => ({ ...prev, dateOfBirth: 'You must be at least 18 years old to register' }));
     }
     setShowYearPicker(false);
   };
@@ -95,12 +95,12 @@ export default function ProfileStep({
     const daysInMonth = new Date(dateOfBirth.getFullYear(), month + 1, 0).getDate();
     const validDay = Math.min(dateOfBirth.getDate(), daysInMonth);
     const newDate = new Date(dateOfBirth.getFullYear(), month, validDay);
-    
+
     if (validateAge(newDate)) {
       setDateOfBirth(newDate);
-      setErrors(prev => ({...prev, dateOfBirth: '' }));
+      setErrors(prev => ({ ...prev, dateOfBirth: '' }));
     } else {
-      setErrors(prev => ({...prev, dateOfBirth: 'You must be at least 18 years old to register' }));
+      setErrors(prev => ({ ...prev, dateOfBirth: 'You must be at least 18 years old to register' }));
     }
     setShowMonthPicker(false);
   };
@@ -113,9 +113,9 @@ export default function ProfileStep({
 
     if (validateAge(newDate)) {
       setDateOfBirth(newDate);
-      setErrors(prev => ({...prev, dateOfBirth: '' }));
+      setErrors(prev => ({ ...prev, dateOfBirth: '' }));
     } else {
-      setErrors(prev => ({...prev, dateOfBirth: 'You must be at least 18 years old to register' }));
+      setErrors(prev => ({ ...prev, dateOfBirth: 'You must be at least 18 years old to register' }));
     }
     setShowDayPicker(false);
   };
@@ -159,7 +159,7 @@ export default function ProfileStep({
   const handleNext = (): void => {
     if (validateForm()) {
       onNext({
-        dateOfBirth,
+        dateOfBirth: dateOfBirth.toISOString().split('T')[0],
         gender,
         marketingConsent: promotionalOffers,
         promoPreferences: promotionalOffers ? promoPreferences : undefined
