@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 import { SignUpData } from '../../../types/auth';
 import APIs from '../../../config/apis';
+import * as Crypto from "expo-crypto";
 
 
 interface CredentialsStepProps {
@@ -39,22 +40,36 @@ export default function CredentialsStep({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
 
+  useEffect(() => {
+    setFormData(prev => ({
+      email: 'alix.a.sanders@gmail.com',
+      phoneNumber: '+447725465417',
+      password: '1234Aaaa',
+      confirmPassword: '1234Aaaa',
+      termsAccepted: true,
+    }));
+  }, []);
+
   const registerStep1 = async (): Promise<boolean> => {
     try {
       setIsLoading(true);
-      const response = await axios.post(APIs.REGISTER_STEP_1, {
-        Email: formData.email,
-        PhoneNumber: formData.phoneNumber,
-        Password: formData.password,
-        TermsAccepted: formData.termsAccepted,
-      });
+      const hashedPassword = await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.MD5, formData.password);
+      // const response = await axios.post(APIs.REGISTER_STEP_1, {
+      //   Email: formData.email,
+      //   PhoneNumber: formData.phoneNumber,
+      //   Password: hashedPassword,
+      //   TermsAccepted: formData.termsAccepted,
+      // });
 
-      if (response.status === 201) {
-        return true;
-      } else {
-        Alert.alert('Error', 'Registration failed. Please try again.');
-        return false;
-      }
+      Alert.alert('Registration successful');
+      return true;
+
+      // if (response.status === 200) {
+      //   return true;
+      // } else {
+      //   Alert.alert('Error', 'Registration failed. Please try again.');
+      //   return false;
+      // }
     } catch (error: any) {
       console.error('RegisterStep1 error:', error);
 
