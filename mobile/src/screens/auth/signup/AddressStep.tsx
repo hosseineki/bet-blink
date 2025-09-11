@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -11,9 +11,10 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { SignUpData, Address } from '../../../types/auth';
+import { SignUpData, Address, AddressSearchResult } from '../../../types/auth';
 import axios from 'axios';
 import APIs from './../../../config/apis';
+import { useNavigation } from '@react-navigation/native';
 
 interface AddressStepProps {
   data: Partial<SignUpData>;
@@ -21,15 +22,58 @@ interface AddressStepProps {
   onPrevious: () => void;
 }
 
+const MOCK_ADDRESSES: AddressSearchResult[] = [
+  {
+    id: '1',
+    address: '184 Whitacres Road',
+    city: 'Glasgow',
+    postCode: 'G53 7ZP',
+    country: 'United Kingdom',
+    formattedAddress: '184 Whitacres Road, Glasgow, G53 7ZP, United Kingdom',
+  },
+  {
+    id: '2',
+    address: '184 High Street',
+    city: 'Edinburgh',
+    postCode: 'EH1 1QS',
+    country: 'United Kingdom',
+    formattedAddress: '184 High Street, Edinburgh, EH1 1QS, United Kingdom',
+  },
+  {
+    id: '3',
+    address: '184 Oxford Street',
+    city: 'London',
+    postCode: 'W1C 1JN',
+    country: 'United Kingdom',
+    formattedAddress: '184 Oxford Street, London, W1C 1JN, United Kingdom',
+  },
+  {
+    id: '4',
+    address: '184 George Street',
+    city: 'Manchester',
+    postCode: 'M1 4HE',
+    country: 'United Kingdom',
+    formattedAddress: '184 George Street, Manchester, M1 4HE, United Kingdom',
+  },
+  {
+    id: '5',
+    address: '184 Queen Street',
+    city: 'Birmingham',
+    postCode: 'B1 1AA',
+    country: 'United Kingdom',
+    formattedAddress: '184 Queen Street, Birmingham, B1 1AA, United Kingdom',
+  },
+];
+
 export default function AddressStep({
   data,
   onNext,
   onPrevious
 }: AddressStepProps): React.JSX.Element {
+  const navigation = useNavigation();
   const [address, setAddress] = useState<Address>({
-    street: data.address?.street || '',
+    address: data.address?.address || '',
     city: data.address?.city || '',
-    state: data.address?.state || '',
     postCode: data.address?.postCode || '',
     country: data.address?.country || 'United Kingdom',
   });
@@ -43,24 +87,118 @@ export default function AddressStep({
   const [currency, setCurrency] = useState<string>('GBP');
   const [promotionCode, setPromotionCode] = useState<string>('');
 
+  // Address search states
+  const [addressSearchResults, setAddressSearchResults] = useState<AddressSearchResult[]>([]);
+  const [isSearching, setIsSearching] = useState<boolean>(false);
+  const [showSearchResults, setShowSearchResults] = useState<boolean>(false);
+  const [selectedAddress, setSelectedAddress] = useState<AddressSearchResult | null>(null);
+  const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    setAddress(prev => ({
+      address: '184 St John Street',
+      city: 'London',
+      postCode: 'EC1M 4BS',
+      country: 'United Kingdom',
+    }));
+  }, []);
+
+  // Address search function
+  const searchAddresses = async (query: string) => {
+    if (query.length < 2) {
+      setAddressSearchResults([]);
+      setShowSearchResults(false);
+      return;
+    }
+
+    try {
+      setIsSearching(true);
+      // const response = await axios.get(APIs.ADDRESS_SEARCH, {
+      //   params: {
+      //     query,
+      //     country: address.country,
+      //   },
+      // });
+      const response = {
+        data: {
+          success: true,
+          data: {
+            addresses: MOCK_ADDRESSES,
+          },
+        },
+      };
+
+      if (response.data.success) {
+        setAddressSearchResults(response.data.data.addresses);
+        setShowSearchResults(true);
+      }
+    } catch (error) {
+      console.error('Address search error:', error);
+      setAddressSearchResults([]);
+      setShowSearchResults(false);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  // Debounced search function
+  const debouncedSearch = useCallback((query: string) => {
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
+    }
+
+    const timeout = setTimeout(() => {
+      searchAddresses(query);
+    }, 300);
+
+    setSearchTimeout(timeout);
+  }, [searchTimeout, address.country]);
+
+  // Handle search query change
+  const handleSearchQueryChange = (query: string) => {
+    setSearchQuery(query);
+    debouncedSearch(query);
+  };
+
+  // Handle address selection
+  const handleAddressSelect = (selectedAddr: AddressSearchResult) => {
+    setSelectedAddress(selectedAddr);
+    setSearchQuery(selectedAddr.address);
+    setShowSearchResults(false);
+
+    // Update the address state with selected address
+    setAddress(prev => ({
+      ...prev,
+      address: selectedAddr.address,
+      city: selectedAddr.city,
+      postCode: selectedAddr.postCode,
+      country: selectedAddr.country,
+    }));
+  };
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (searchTimeout) {
+        clearTimeout(searchTimeout);
+      }
+    };
+  }, [searchTimeout]);
+
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (!address.street.trim()) {
-      newErrors.street = 'Street address is required';
+    if (!address.address.trim()) {
+      newErrors.address = 'Address is required';
     }
 
     if (!address.city.trim()) {
       newErrors.city = 'City is required';
     }
 
-    if (!address.state.trim()) {
-      newErrors.state = 'State is required';
-    }
-
     if (!address.postCode.trim()) {
       newErrors.postCode = 'Postal code is required';
-    } else if (!/^\d{5}(-\d{4})?$/.test(address.postCode)) {
+    } else if (!/^[A-Z0-9\s-]{3,10}$/i.test(address.postCode)) {
       newErrors.postCode = 'Please enter a valid postal code';
     }
 
@@ -72,23 +210,21 @@ export default function AddressStep({
     return Object.keys(newErrors).length === 0;
   };
 
-  const registerStep2 = async () => {
+  const registerStep2 = async (): Promise<boolean> => {
     try {
       setIsLoading(true);
-      
       // Combine profile data from previous step with current address data
       const registrationData = {
         ...data, // Profile data from ProfileStep
-        address: {
-          ...address,
-          currency,
-          promotionCode: promotionCode || undefined,
-        },
+        address,
+        currency,
+        promotionCode: promotionCode || undefined,
       };
-
+      console.log('response', 'before', registrationData);
       const response = await axios.post(APIs.REGISTER_STEP_2, registrationData);
+      console.log('response', 'after');
 
-      if (response.status === 201 || response.status === 200) {
+      if (response.status === 200) {
         return true;
       } else {
         Alert.alert('Error', 'Registration failed. Please try again.');
@@ -108,17 +244,17 @@ export default function AddressStep({
     }
   }
 
-  const handleNext = async (): void => {
+  const handleSubmit = async (): Promise<void> => {
     if (validateForm()) {
       const success = await registerStep2();
       if (success) {
-        onNext({ 
-          address: {
-            ...address,
-            currency,
-            promotionCode: promotionCode || undefined,
-          }
-        });
+        // onNext({
+        //   address,
+        //   currency,
+        //   promotionCode: promotionCode || undefined,
+        // });
+        Alert.alert('Success', 'Account created successfully!');
+        //navigation.navigate('SignIn');
       }
     }
   };
@@ -181,17 +317,52 @@ export default function AddressStep({
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Address *</Text>
               <View style={styles.searchContainer}>
-                <TextInput
-                  style={styles.searchInput}
-                  value={searchQuery}
-                  onChangeText={setSearchQuery}
-                  placeholder="184"
-                  placeholderTextColor="#666"
-                />
+                <View style={styles.searchInputContainer}>
+                  <TextInput
+                    id="address-search"
+                    style={styles.searchInput}
+                    value={searchQuery}
+                    onChangeText={handleSearchQueryChange}
+                    placeholder="184"
+                    placeholderTextColor="#666"
+                    onFocus={() => {
+                      if (addressSearchResults.length > 0) {
+                        setShowSearchResults(true);
+                      }
+                    }}
+                  />
+                  {isSearching && (
+                    <View style={styles.searchLoadingContainer}>
+                      <Ionicons name="search" size={16} color="#666" />
+                    </View>
+                  )}
+                </View>
                 <TouchableOpacity style={styles.searchButton}>
                   <Text style={styles.searchButtonText}>Search address</Text>
                 </TouchableOpacity>
               </View>
+
+              {/* Search Results Dropdown */}
+              {showSearchResults && addressSearchResults.length > 0 && (
+                <View style={styles.searchResultsContainer}>
+                  <ScrollView
+                    style={styles.searchResultsList}
+                    showsVerticalScrollIndicator={false}
+                    keyboardShouldPersistTaps="handled"
+                  >
+                    {addressSearchResults.map((item) => (
+                      <TouchableOpacity
+                        key={item.id}
+                        style={styles.searchResultItem}
+                        onPress={() => handleAddressSelect(item)}
+                      >
+                        <Text style={styles.searchResultText}>{item.formattedAddress}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </View>
+              )}
+
               <TouchableOpacity
                 style={styles.manualLink}
                 onPress={() => setIsManualEntry(true)}
@@ -199,6 +370,18 @@ export default function AddressStep({
                 <Text style={styles.manualLinkText}>Or, enter manually</Text>
               </TouchableOpacity>
             </View>
+
+            {/* Selected Address Display */}
+            {selectedAddress && (
+              <View style={styles.selectedAddressContainer}>
+                <Text style={styles.label}>Address</Text>
+                <View style={styles.selectedAddressBox}>
+                  <Text style={styles.selectedAddressText}>{selectedAddress.address}</Text>
+                  <Text style={styles.selectedAddressText}>{selectedAddress.city}</Text>
+                  <Text style={styles.selectedAddressText}>{selectedAddress.postCode}</Text>
+                </View>
+              </View>
+            )}
 
             {/* Currency */}
             <View style={styles.inputGroup}>
@@ -248,18 +431,18 @@ export default function AddressStep({
               <Text style={styles.manualLinkText}>← Back to address search</Text>
             </TouchableOpacity>
 
-            {/* Street Address */}
+            {/* Address */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Enter address *</Text>
               <TextInput
-                style={[styles.input, errors.street && styles.inputError]}
-                value={address.street}
-                onChangeText={(value) => handleInputChange('street', value)}
-                placeholder="184"
+                style={[styles.input, errors.address && styles.inputError]}
+                value={address.address}
+                onChangeText={(value) => handleInputChange('address', value)}
+                placeholder="184 St John Street"
                 placeholderTextColor="#666"
                 autoCapitalize="words"
               />
-              {errors.street && <Text style={styles.errorText}>{errors.street}</Text>}
+              {errors.address && <Text style={styles.errorText}>{errors.address}</Text>}
             </View>
 
             {/* City */}
@@ -285,7 +468,6 @@ export default function AddressStep({
                 onChangeText={(value) => handleInputChange('postCode', value)}
                 placeholder="Enter postal code"
                 placeholderTextColor="#666"
-                keyboardType="numeric"
                 maxLength={10}
               />
               {errors.postCode && <Text style={styles.errorText}>{errors.postCode}</Text>}
@@ -420,28 +602,21 @@ export default function AddressStep({
       </Modal>
 
       {/* Navigation Buttons */}
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity style={styles.previousButton} onPress={onPrevious}>
-          <Ionicons name="arrow-back" size={20} color="#ffffff" />
-          <Text style={styles.previousButtonText}>Previous</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity 
-          style={[styles.nextButton, isLoading && styles.nextButtonDisabled]} 
-          onPress={handleNext}
-          disabled={isLoading}
+      <TouchableOpacity
+        style={[styles.nextButton, isLoading && styles.nextButtonDisabled]}
+        onPress={handleSubmit}
+        disabled={isLoading}
+      >
+        <LinearGradient
+          colors={isLoading ? ['#666', '#555'] : ['#ffd700', '#ffed4e']}
+          style={styles.nextButtonGradient}
         >
-          <LinearGradient
-            colors={isLoading ? ['#666', '#555'] : ['#ffd700', '#ffed4e']}
-            style={styles.nextButtonGradient}
-          >
-            <Text style={[styles.nextButtonText, isLoading && styles.nextButtonTextDisabled]}>
-              {isLoading ? 'Processing...' : 'Next'}
-            </Text>
-            {!isLoading && <Ionicons name="arrow-forward" size={20} color="#1a1a2e" />}
-          </LinearGradient>
-        </TouchableOpacity>
-      </View>
+          <Text style={[styles.nextButtonText, isLoading && styles.nextButtonTextDisabled]}>
+            {isLoading ? 'Processing...' : 'Submit'}
+          </Text>
+          {!isLoading && <Ionicons name="arrow-forward" size={20} color="#1a1a2e" />}
+        </LinearGradient>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -531,12 +706,6 @@ const styles = StyleSheet.create({
     marginLeft: 12,
     lineHeight: 20,
   },
-  buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingTop: 20,
-  },
   previousButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -549,8 +718,8 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   nextButton: {
-    flex: 1,
-    marginLeft: 20,
+    width: '100%',
+    marginTop: 20
   },
   nextButtonGradient: {
     flexDirection: 'row',
@@ -596,16 +765,75 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
   },
-  searchInput: {
+  searchInputContainer: {
     flex: 1,
+    position: 'relative',
+  },
+  searchInput: {
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
+    paddingRight: 40,
     fontSize: 16,
     color: '#ffffff',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  searchLoadingContainer: {
+    position: 'absolute',
+    right: 12,
+    top: '50%',
+    transform: [{ translateY: -8 }],
+  },
+  searchResultsContainer: {
+    position: 'absolute',
+    top: '65%',
+    left: 0,
+    right: 0,
+    backgroundColor: '#2a2a3e',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+    marginTop: 4,
+    maxHeight: 200,
+    zIndex: 1000,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  searchResultsList: {
+    maxHeight: 200,
+  },
+  searchResultItem: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  searchResultText: {
+    color: '#ffffff',
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  selectedAddressContainer: {
+    marginTop: -30,
+    marginBottom: 20,
+  },
+  selectedAddressBox: {
+    backgroundColor: 'rgba(76, 175, 80, 0.1)',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderWidth: 1,
+    borderColor: '#4CAF50',
+  },
+  selectedAddressText: {
+    color: '#ffffff',
+    fontSize: 16,
+    marginBottom: 2,
   },
   searchButton: {
     backgroundColor: '#ffd700',
