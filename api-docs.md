@@ -1,3 +1,5 @@
+https://webapi3.progressplay.net/docs/api/v1.0/index#!/Players/
+
 to get addressses: api/registration/getAddress?bpc=1
 
 Login mock data:
